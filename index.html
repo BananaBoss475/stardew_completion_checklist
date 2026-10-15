@@ -1,0 +1,885 @@
+<title>Gourmet Chef &amp; Craft Master</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,800&family=Atkinson+Hyperlegible:wght@400;700&family=IBM+Plex+Mono:wght@500&display=swap">
+<style>
+/* Layout: sticky Kopf mit Fortschritt, Ansicht (Gerichte/Zutaten) und Saison-Filter; darunter Gruppen, je Gruppe nach Saison unterteilt */
+:root{
+  --bg:#f2f4ec; --surface:#fbfcf7; --fg:#1d2619; --muted:#5d6656; --line:#d8ddcc;
+  --accent:#2c6a4a; --accent-ink:#ffffff;
+  --sp:#2f8a3e; --sp-bg:#e0f0dc;
+  --su:#9a6b00; --su-bg:#fbedc4;
+  --fa:#b04f1c; --fa-bg:#f8e0d0;
+  --wi:#2f69a8; --wi-bg:#dbe7f4;
+  --yr:#5c6356; --yr-bg:#e6e8e0;
+  --warn:#9b3b12;
+  --f-display:"Bricolage Grotesque",ui-sans-serif,system-ui,sans-serif;
+  --f-body:"Atkinson Hyperlegible",ui-sans-serif,system-ui,sans-serif;
+  --f-mono:"IBM Plex Mono",ui-monospace,Menlo,monospace;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#141a13; --surface:#1b2219; --fg:#e7ecdf; --muted:#9aa492; --line:#2f382b;
+  --accent:#6fc196; --accent-ink:#0f1a12;
+  --sp:#7fd08a; --sp-bg:#1f3a22; --su:#f0c552; --su-bg:#3a3014; --fa:#f29a68; --fa-bg:#3d2417;
+  --wi:#8bb8ec; --wi-bg:#1b2b40; --yr:#b4baab; --yr-bg:#2a3027; --warn:#f2a47a; --ava-l:78%; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#141a13; --surface:#1b2219; --fg:#e7ecdf; --muted:#9aa492; --line:#2f382b;
+  --accent:#6fc196; --accent-ink:#0f1a12;
+  --sp:#7fd08a; --sp-bg:#1f3a22; --su:#f0c552; --su-bg:#3a3014; --fa:#f29a68; --fa-bg:#3d2417;
+  --wi:#8bb8ec; --wi-bg:#1b2b40; --yr:#b4baab; --yr-bg:#2a3027; --warn:#f2a47a; --ava-l:78%; color-scheme:dark}
+
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--fg);font:15px/1.5 var(--f-body)}
+.wrap{max-width:860px;margin:0 auto;padding-inline:16px;padding-block:0 48px}
+a{color:inherit}
+header.top{position:sticky;top:env(safe-area-inset-top,0px);z-index:5;background:var(--bg);border-bottom:1px solid var(--line);padding-block:14px 12px}
+.titlerow{display:flex;flex-wrap:wrap;align-items:baseline;justify-content:space-between;gap:4px 16px}
+h1{font:800 clamp(22px,4.5vw,30px)/1.1 var(--f-display);margin:0;letter-spacing:-.01em;text-wrap:balance}
+.count{font:500 14px var(--f-mono);color:var(--muted);font-variant-numeric:tabular-nums}
+.stats{display:flex;flex-wrap:wrap;gap:4px 18px}
+.stats b{color:var(--fg)}
+.bar{height:8px;background:var(--line);border-radius:4px;margin-top:10px;overflow:hidden}
+.bar i{display:block;height:100%;width:0;background:var(--accent);transition:width .3s}
+.switches{display:flex;flex-wrap:wrap;gap:10px;margin-top:12px;align-items:center}
+.modes{display:inline-flex;gap:4px;background:var(--line);padding:3px;border-radius:10px}
+.mode{font:800 15px var(--f-display);background:transparent;color:var(--muted);border:0;padding:6px 14px;border-radius:8px;cursor:pointer}
+.mode[aria-selected="true"]{background:var(--surface);color:var(--fg);box-shadow:0 1px 2px rgba(0,0,0,.12)}
+.tabs{display:inline-flex;border:1.5px solid var(--fg);border-radius:8px;overflow:hidden}
+.tab{font:700 14px var(--f-body);background:var(--surface);color:var(--fg);border:0;padding:6px 16px;cursor:pointer}
+.tab+.tab{border-left:1.5px solid var(--fg)}
+.tab[aria-selected="true"]{background:var(--fg);color:var(--bg)}
+.controls{display:flex;flex-wrap:wrap;gap:8px;margin-top:10px;align-items:center}
+.chip{font:700 13px var(--f-body);border:1.5px solid var(--line);background:var(--surface);color:var(--fg);padding:5px 11px;border-radius:999px;cursor:pointer}
+.chip[aria-pressed="true"]{background:var(--fg);color:var(--bg);border-color:var(--fg)}
+.chip.sp[aria-pressed="true"]{background:var(--sp);border-color:var(--sp);color:var(--surface)}
+.chip.su[aria-pressed="true"]{background:var(--su);border-color:var(--su);color:var(--surface)}
+.chip.fa[aria-pressed="true"]{background:var(--fa);border-color:var(--fa);color:var(--surface)}
+.chip.wi[aria-pressed="true"]{background:var(--wi);border-color:var(--wi);color:var(--surface)}
+.chip.yr[aria-pressed="true"]{background:var(--yr);border-color:var(--yr);color:var(--surface)}
+.chip:focus-visible,button:focus-visible,input:focus-visible,a:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.toggle{display:flex;align-items:center;gap:6px;font-size:13px;color:var(--muted);margin-left:auto;cursor:pointer}
+.toggle input{width:16px;height:16px;accent-color:var(--accent)}
+
+.intro{color:var(--muted);font-size:14px;max-width:65ch;margin:18px 0 0}
+
+section.group{margin-top:28px}
+.ghead{display:flex;align-items:baseline;justify-content:space-between;gap:12px;border-bottom:2px solid var(--fg);padding-bottom:4px}
+.ghead h2{font:800 20px/1.2 var(--f-display);margin:0}
+.ghead .count{font-size:13px}
+.bucket{font:700 11px var(--f-body);letter-spacing:.08em;text-transform:uppercase;color:var(--muted);margin:14px 0 4px;display:flex;align-items:center;gap:8px}
+.bucket::before{content:"";width:10px;height:10px;border-radius:2px;background:var(--c,var(--yr));flex:none}
+ul.items{list-style:none;margin:0;padding:0}
+li.item{display:grid;grid-template-columns:auto 1fr auto;gap:2px 12px;align-items:start;padding:8px 0;border-bottom:1px solid var(--line)}
+li.item:last-child{border-bottom:0}
+li.item input{width:20px;height:20px;margin:2px 0 0;accent-color:var(--accent);cursor:pointer}
+li.item input:disabled{cursor:default}
+.main{min-width:0}
+.name{font-weight:700}
+.name a{text-decoration:none;border-bottom:1px dotted var(--muted)}
+.name a:hover{border-bottom-style:solid}
+.note{font-size:13px;color:var(--muted);margin-top:1px}
+.note b{color:var(--warn);font-weight:700}
+.qty{font:500 14px var(--f-mono);font-variant-numeric:tabular-nums;text-align:right;white-space:nowrap}
+.qty small{display:block;font-size:11px;color:var(--muted)}
+.pills{display:flex;flex-wrap:wrap;gap:4px;margin-top:4px}
+.pill{font:700 11px/1 var(--f-body);padding:4px 7px;border-radius:4px;color:var(--c);background:var(--cb)}
+.pill.have{text-decoration:line-through;opacity:.6}
+.sp{--c:var(--sp);--cb:var(--sp-bg)} .su{--c:var(--su);--cb:var(--su-bg)}
+.fa{--c:var(--fa);--cb:var(--fa-bg)} .wi{--c:var(--wi);--cb:var(--wi-bg)} .yr{--c:var(--yr);--cb:var(--yr-bg)}
+.ready{font:700 10px var(--f-body);letter-spacing:.06em;text-transform:uppercase;color:var(--accent);display:block}
+li.item.done .name,li.item.done .note,li.item.done .pills{opacity:.5}
+li.item.done .name{text-decoration:line-through}
+.empty{color:var(--muted);font-size:14px;padding:10px 0}
+
+footer{margin-top:36px;display:flex;flex-wrap:wrap;gap:12px;align-items:center;justify-content:space-between;color:var(--muted);font-size:13px}
+.sync::before{content:"● ";color:var(--muted)}
+.sync.ok::before{color:var(--accent)}
+.sync.bad{color:var(--warn);font-weight:700}
+.sync.bad::before{color:var(--warn)}
+.reset{font:700 13px var(--f-body);background:none;border:1.5px solid var(--line);color:var(--fg);border-radius:6px;padding:5px 10px;cursor:pointer}
+.reset.arm{border-color:var(--warn);color:var(--warn)}
+/* Dorfbewohner: Hover zeigt Karte rechts unter der Zeile (nur Maus, breite Fenster), Klick klappt sie in der Zeile auf */
+.npc .tabs,.npc .chip,.npc .stats>span:last-child{display:none}
+.npc .toggle{margin-left:0}
+li.npc{position:relative;cursor:pointer;align-items:center;grid-template-columns:auto auto 1fr auto}
+li.npc input{margin:0}
+li.item.done .ava{opacity:.5}
+.ava{width:30px;height:30px;border-radius:50%;display:grid;place-items:center;font:800 15px var(--f-display);background:hsl(var(--h) 45% 50% / .2);color:hsl(var(--h) 50% var(--ava-l,32%))}
+.more{font:700 13px var(--f-mono);background:var(--surface);color:var(--fg);border:1.5px solid var(--line);border-radius:6px;padding:4px 8px;cursor:pointer}
+li.npc.open .more{background:var(--fg);color:var(--bg);border-color:var(--fg)}
+.gift{display:none;grid-column:1/-1;cursor:auto;padding:4px 0 6px}
+li.npc.open .gift{display:block}
+.gift h3{font:800 13px var(--f-display);letter-spacing:.06em;text-transform:uppercase;margin:10px 0 6px}
+.gift h3:first-child{margin-top:4px}
+.gchips{display:flex;flex-wrap:wrap;gap:5px}
+.gchip{display:inline-flex;align-items:center;gap:5px;font:700 13px/1.2 var(--f-body);padding:4px 8px 4px 5px;border-radius:6px;color:var(--c);background:var(--cb)}
+.gchip a{text-decoration:none}
+.gchip a:hover{text-decoration:underline}
+.gchip .ico{font-size:17px;line-height:1}
+.gchip.nn{color:var(--fg);background:var(--surface);border:1px solid var(--line)}
+.gchips.small .gchip{font-size:12px;padding:2px 7px 2px 4px}
+.gchips.small .ico{font-size:14px}
+.intro details{margin-top:8px}
+.intro summary{cursor:pointer;font-weight:700;color:var(--fg)}
+.intro details p{margin:6px 0 0}
+.uni{font-size:13px;color:var(--muted);margin-top:6px}
+.warnline{color:var(--warn);font-weight:700}
+@media (hover:hover) and (pointer:fine) and (min-width:700px){
+  li.npc:not(.open):hover .gift{display:block;position:absolute;left:38%;right:0;top:calc(100% - 6px);z-index:4;background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:10px 14px 12px;box-shadow:0 8px 24px rgba(0,0,0,.18)}
+  li.npc:hover{background:var(--surface)}
+  /* Platz unter der Liste, damit die Karte der letzten Zeilen die Seite nicht verlängert (sonst springt die Scrollleiste) */
+  .npc main{padding-bottom:320px}
+}
+@media (max-width:520px){.toggle{margin-left:0}}
+@media (prefers-reduced-motion:reduce){.bar i{transition:none}}
+</style>
+
+<div class="wrap">
+  <header class="top">
+    <div class="titlerow">
+      <h1>Gourmet Chef &amp; Craft Master</h1>
+      <div class="stats count"><span><span id="recStat">Gerichte</span> <b id="doneCount">0 / 81</b></span><span><span id="openStat">Zutaten offen</span> <b id="openCount">0</b></span></div>
+    </div>
+    <div class="bar"><i id="bar"></i></div>
+    <div class="switches">
+      <div class="modes" role="tablist" aria-label="Erfolg">
+        <button class="mode" role="tab" data-mode="cook" aria-selected="true">Kochen</button>
+        <button class="mode" role="tab" data-mode="craft" aria-selected="false">Craften</button>
+        <button class="mode" role="tab" data-mode="npc" aria-selected="false">Dorfbewohner</button>
+      </div>
+      <div class="tabs" role="tablist" aria-label="Ansicht">
+        <button class="tab" role="tab" id="tab-rec" data-view="rec" aria-selected="true">Gerichte</button>
+        <button class="tab" role="tab" id="tab-ing" data-view="ing" aria-selected="false">Zutaten</button>
+      </div>
+    </div>
+    <div class="controls" role="group" aria-label="Nach Jahreszeit filtern">
+      <button class="chip" data-f="alle" aria-pressed="true">Alle</button>
+      <button class="chip sp" data-f="Sp" aria-pressed="false">Frühling</button>
+      <button class="chip su" data-f="Su" aria-pressed="false">Sommer</button>
+      <button class="chip fa" data-f="Fa" aria-pressed="false">Herbst</button>
+      <button class="chip wi" data-f="Wi" aria-pressed="false">Winter</button>
+      <button class="chip yr" data-f="all" aria-pressed="false">Ganzjährig</button>
+      <label class="toggle"><input type="checkbox" id="hideDone"> Erledigte ausblenden</label>
+    </div>
+  </header>
+
+  <div class="intro" id="intro"></div>
+
+  <main id="list"></main>
+
+  <footer>
+    <span class="sync" id="sync">In diesem Browser gespeichert</span>
+    <button class="reset" id="reset" type="button">Kochen zurücksetzen</button>
+  </footer>
+</div>
+
+<script>
+const COOK_GROUPS=[
+ {name:"Fisch",items:[
+  ["sunfish","Sunfish","Sp Su","Fluss (Stadt/Wald), 6–19 Uhr, nur Sonne oder Wind"],
+  ["bream","Bream","all","Fluss (Stadt/Wald), 18–2 Uhr"],
+  ["squid","Squid","Wi","Meer, 18–2 Uhr"],
+  ["seacucumber","Sea Cucumber","Fa Wi","Meer, 6–19 Uhr"],
+  ["carp","Carp","all","Bergsee, Geheimer Wald, Kanalisation"],
+  ["salmon","Salmon","Fa","Fluss (Stadt/Wald), 6–19 Uhr"],
+  ["tuna","Tuna","Su Wi","Meer, 6–19 Uhr; Ginger Island ganzjährig"],
+  ["lmbass","Largemouth Bass","all","Bergsee, 6–19 Uhr"],
+  ["shrimp","Shrimp","all","Krabbenkorb im Meer"],
+  ["rtrout","Rainbow Trout","Su","Fluss oder Bergsee, 6–19 Uhr, <b>nur bei Sonne</b>"],
+  ["eel","Eel","Sp Fa","Meer, 16–2 Uhr, <b>nur bei Regen</b>"],
+  ["sardine","Sardine","Sp Fa Wi","Meer, 6–19 Uhr"],
+  ["whitealgae","White Algae","all","Angeln in Mine, Kanalisation, Hexensumpf"],
+  ["greenalgae","Green Algae","all","Beifang beim Angeln in Fluss, See und Meer"],
+  ["flounder","Flounder","Sp Su","Meer, 6–20 Uhr; Ginger Island ganzjährig"],
+  ["midcarp","Midnight Carp","Fa Wi","Bergsee oder Waldteich, <b>22–2 Uhr</b>"],
+  ["clam","Clam","all","Krabbenkorb im Meer oder Strand"],
+  ["crayfish","Crayfish","all","Krabbenkorb im Süßwasser"],
+  ["mussel","Mussel","all","Krabbenkorb im Meer oder Strand"],
+  ["periwinkle","Periwinkle","all","Krabbenkorb im Süßwasser"],
+  ["snail","Snail","all","Krabbenkorb im Süßwasser"],
+  ["lobster","Lobster","all","Krabbenkorb im Meer"],
+  ["crab","Crab","all","Krabbenkorb im Meer"],
+  ["seaweed","Seaweed","all","Beifang beim Angeln im Meer"],
+  ["anyfish","Beliebiger Fisch","all","Jeder Fisch zählt, auch Krabbenkorb-Fang"]]},
+ {name:"Tierprodukte",items:[
+  ["milk","Milk","all","Kuh"],
+  ["egg","Egg","all","Huhn"],
+  ["cheese","Cheese","all","Milch in die Käsepresse"],
+  ["mayo","Mayonnaise","all","Ei in die Mayonnaisemaschine"],
+  ["voidmayo","Void Mayonnaise","all","Void Egg in die Mayonnaisemaschine"]]},
+ {name:"Zwischengerichte",items:[
+  ["friedegg","Fried Egg","-","Selbst kochen"],
+  ["hashbrowns","Hashbrowns","-","Selbst kochen"],
+  ["pancakes","Pancakes","-","Selbst kochen"],
+  ["omelet","Omelet","-","Selbst kochen"],
+  ["tortilla","Tortilla","-","Selbst kochen"],
+  ["bread","Bread","-","Selbst kochen"],
+  ["coffee","Coffee","all","Kaffeebohnen ins Fass oder Kaffeemaschine"]]},
+ {name:"Gekaufte Zutaten",items:[
+  ["vinegar","Vinegar","all","Pierre's"],
+  ["flour","Wheat Flour","all","Pierre's"],
+  ["sugar","Sugar","all","Pierre's"],
+  ["oil","Oil","all","Pierre's"],
+  ["rice","Rice","all","Pierre's"]]},
+ {name:"Sammeln",items:[
+  ["leek","Leek","Sp","Berg, Hinterwald, Bushaltestelle"],
+  ["dandelion","Dandelion","Sp","Cindersap-Wald, Bushaltestelle"],
+  ["cmushroom","Common Mushroom","Sp Fa","Herbst überall im Wald; Frühling nur Geheimer Wald; Farmhöhle ganzjährig"],
+  ["morel","Morel","Sp","Geheimer Wald"],
+  ["coconut","Coconut","all","Wüste oder Ginger Island"],
+  ["cavecarrot","Cave Carrot","all","Forage in der Mine"],
+  ["winterroot","Winter Root","Wi","Boden umgraben (Hacke)"],
+  ["wildplum","Wild Plum","Fa","Bushaltestelle, Bahngleise, Berg"],
+  ["hazelnut","Hazelnut","Fa","Berg, Hinterwald; Ahorn schütteln ab Herbst 14"],
+  ["fiddlehead","Fiddlehead Fern","Su","Geheimer Wald"],
+  ["blackberry","Blackberry","Fa","Büsche, Brombeersaison Herbst 8–11"],
+  ["horseradish","Wild Horseradish","Sp","Geheimer Wald, Cindersap-Wald, Berg"],
+  ["ginger","Ginger","all","Ginger Island"],
+  ["moss","Moss","all","Wächst an Bäumen"],
+  ["maplesyrup","Maple Syrup","all","Zapfhahn an Ahornbaum"]]},
+ {name:"Obst",items:[
+  ["melon","Melon","Su","Pierre's"],
+  ["rhubarb","Rhubarb","Sp","Samen bei der Oase (Wüste)"],
+  ["blueberry","Blueberry","Su","Pierre's"],
+  ["cranberries","Cranberries","Fa","Pierre's"],
+  ["apricot","Apricot","Sp","Obstbaum, 28 Tage Wachstum"],
+  ["apple","Apple","Fa","Obstbaum, 28 Tage Wachstum"],
+  ["banana","Banana","Su","Obstbaum; auf Ginger Island ganzjährig"],
+  ["mango","Mango","Su","Obstbaum; auf Ginger Island ganzjährig"],
+  ["pineapple","Pineapple","Su","Samen von Ginger Island; dort ganzjährig"]]},
+ {name:"Gemüse",items:[
+  ["cauliflower","Cauliflower","Sp","Pierre's"],
+  ["parsnip","Parsnip","Sp","Pierre's"],
+  ["tomato","Tomato","Su","Pierre's"],
+  ["beet","Beet","Fa","Samen bei der Oase (Wüste)"],
+  ["greenbean","Green Bean","Sp","Pierre's, braucht Rankgitter"],
+  ["yam","Yam","Fa","Pierre's"],
+  ["potato","Potato","Sp","Pierre's"],
+  ["amaranth","Amaranth","Fa","Pierre's"],
+  ["kale","Kale","Sp","Pierre's"],
+  ["redcabbage","Red Cabbage","Su","<b>Pierre's erst ab Jahr 2</b>; Jahr 1 nur Reisekarren oder Totenschädelhöhle"],
+  ["hotpepper","Hot Pepper","Su","Pierre's"],
+  ["corn","Corn","Su Fa","Pierre's, wächst über beide Jahreszeiten"],
+  ["radish","Radish","Su","Pierre's"],
+  ["eggplant","Eggplant","Fa","Pierre's"],
+  ["pumpkin","Pumpkin","Fa","Pierre's"],
+  ["bokchoy","Bok Choy","Fa","Pierre's"],
+  ["artichoke","Artichoke","Fa","<b>Pierre's erst ab Jahr 2</b>"],
+  ["garlic","Garlic","Sp","<b>Pierre's erst ab Jahr 2</b>"],
+  ["taro","Taro Root","Su","Samen von Ginger Island; dort ganzjährig"]]},
+ {name:"Blumen",items:[
+  ["poppy","Poppy","Su","Pierre's"],
+  ["bluejazz","Blue Jazz","Sp","Pierre's"]]},
+ {name:"Monster-Drops",items:[
+  ["squidink","Squid Ink","all","Squid Kid in der Mine oder Fischteich mit Squid"]]}
+];
+
+// Alle 81 Rezepte: [id, Name, Zutaten ("id*menge")]. Zwischengerichte nutzen dieselbe id wie in der Zutatenliste.
+const RECIPES=[
+ ["friedegg","Fried Egg","egg"],["omelet","Omelet","egg milk"],["salad","Salad","leek dandelion vinegar"],
+ ["cheesecauli","Cheese Cauliflower","cauliflower cheese"],["bakedfish","Baked Fish","sunfish bream flour"],
+ ["parsnipsoup","Parsnip Soup","parsnip milk vinegar"],["vegmedley","Vegetable Medley","tomato beet"],
+ ["completebreakfast","Complete Breakfast","friedegg milk hashbrowns pancakes"],
+ ["friedcalamari","Fried Calamari","squid flour oil"],["strangebun","Strange Bun","flour periwinkle voidmayo"],
+ ["luckylunch","Lucky Lunch","seacucumber tortilla bluejazz"],["friedmushroom","Fried Mushroom","cmushroom morel oil"],
+ ["pizza","Pizza","flour tomato cheese"],["beanhotpot","Bean Hotpot","greenbean*2"],["glazedyams","Glazed Yams","yam sugar"],
+ ["carpsurprise","Carp Surprise","carp*4"],["hashbrowns","Hashbrowns","potato oil"],["pancakes","Pancakes","flour egg"],
+ ["salmondinner","Salmon Dinner","salmon amaranth kale"],["fishtaco","Fish Taco","tuna tortilla redcabbage mayo"],
+ ["crispybass","Crispy Bass","lmbass flour oil"],["pepperpoppers","Pepper Poppers","hotpepper cheese"],["bread","Bread","flour"],
+ ["tomkha","Tom Kha Soup","coconut shrimp cmushroom"],["troutsoup","Trout Soup","rtrout greenalgae"],
+ ["chococake","Chocolate Cake","flour sugar egg"],["pinkcake","Pink Cake","melon flour sugar egg"],
+ ["rhubarbpie","Rhubarb Pie","rhubarb flour sugar"],["cookie","Cookie","flour sugar egg"],["spaghetti","Spaghetti","flour tomato"],
+ ["friedeel","Fried Eel","eel oil"],["spicyeel","Spicy Eel","eel hotpepper"],["sashimi","Sashimi","anyfish"],
+ ["maki","Maki Roll","anyfish seaweed rice"],["tortilla","Tortilla","corn"],["redplate","Red Plate","redcabbage radish"],
+ ["eggplantparm","Eggplant Parmesan","eggplant tomato"],["ricepudding","Rice Pudding","milk sugar rice"],
+ ["icecream","Ice Cream","milk sugar"],["blueberrytart","Blueberry Tart","blueberry flour sugar egg"],
+ ["autumnsbounty","Autumn's Bounty","yam pumpkin"],["pumpkinsoup","Pumpkin Soup","pumpkin milk"],
+ ["supermeal","Super Meal","bokchoy cranberries artichoke"],["cranberrysauce","Cranberry Sauce","cranberries sugar"],
+ ["stuffing","Stuffing","bread cranberries hazelnut"],["farmerslunch","Farmer's Lunch","omelet parsnip"],
+ ["survivalburger","Survival Burger","bread cavecarrot eggplant"],["dishosea","Dish O' The Sea","sardine*2 hashbrowns"],
+ ["minerstreat","Miner's Treat","cavecarrot*2 sugar milk"],["rootsplatter","Roots Platter","cavecarrot winterroot"],
+ ["espresso","Triple Shot Espresso","coffee*3"],["seafoam","Seafoam Pudding","flounder midcarp squidink"],
+ ["algaesoup","Algae Soup","greenalgae*4"],["palebroth","Pale Broth","whitealgae*2"],
+ ["plumpudding","Plum Pudding","wildplum*2 flour sugar"],["artichokedip","Artichoke Dip","artichoke milk"],
+ ["stirfry","Stir Fry","cavecarrot cmushroom kale oil"],["roastedhazel","Roasted Hazelnuts","hazelnut*3"],
+ ["pumpkinpie","Pumpkin Pie","pumpkin flour milk sugar"],["radishsalad","Radish Salad","oil vinegar radish"],
+ ["fruitsalad","Fruit Salad","blueberry melon apricot"],["cobbler","Blackberry Cobbler","blackberry*2 sugar flour"],
+ ["cranberrycandy","Cranberry Candy","cranberries apple sugar"],["bruschetta","Bruschetta","bread oil tomato"],
+ ["coleslaw","Coleslaw","redcabbage vinegar mayo"],["risotto","Fiddlehead Risotto","oil fiddlehead garlic"],
+ ["poppyseed","Poppyseed Muffin","poppy flour sugar"],["chowder","Chowder","clam milk"],
+ ["fishstew","Fish Stew","crayfish mussel periwinkle tomato"],["escargot","Escargot","snail garlic"],
+ ["lobsterbisque","Lobster Bisque","lobster milk"],["maplebar","Maple Bar","maplesyrup sugar flour"],
+ ["crabcakes","Crab Cakes","crab flour egg oil"],["shrimpcocktail","Shrimp Cocktail","tomato shrimp horseradish"],
+ ["gingerale","Ginger Ale","ginger*3 sugar"],["bananapudding","Banana Pudding","banana milk sugar"],
+ ["mangorice","Mango Sticky Rice","mango coconut rice"],["poi","Poi","taro*4"],
+ ["tropicalcurry","Tropical Curry","coconut pineapple hotpepper"],["ravioli","Squid Ink Ravioli","squidink flour tomato"],
+ ["mosssoup","Moss Soup","moss*20"]
+];
+
+
+// Crafting-Materialien: [id, Name, Jahreszeiten, Hinweis]
+const CRAFT_GROUPS=[
+ {name:"Grundmaterial",items:[
+  ["wood","Wood","all","Bäume fällen"],
+  ["hardwood","Hardwood","all","Große Stümpfe, Mahagonibäume, Geheimer Wald"],
+  ["stone","Stone","all","Steine abbauen"],
+  ["fiber","Fiber","all","Unkraut, Fiber Seeds"],
+  ["clay","Clay","all","Boden umgraben"],
+  ["sap","Sap","all","Bäume fällen oder Zapfhahn an Mahagoni"],
+  ["mixedseeds","Mixed Seeds","all","Unkraut"],
+  ["batterypack","Battery Pack","all","Blitzableiter bei Gewitter"]]},
+ {name:"Landwirtschaft",items:[
+  ["maplesyrup","Maple Syrup","all","Zapfhahn an Ahornbaum"],
+  ["pinetar","Pine Tar","all","Zapfhahn an Kiefer"],
+  ["oakresin","Oak Resin","all","Zapfhahn an Eiche"],
+  ["mysticsyrup","Mystic Syrup","all","Zapfhahn an Mystic Tree"],
+  ["truffleoil","Truffle Oil","Sp Su Fa","Trüffel in die Ölpresse; Schweine finden Trüffel nur draußen"],
+  ["oil","Oil","all","Pierre's"],
+  ["pumpkin","Pumpkin","Fa","Pierre's"],
+  ["ginger","Ginger","all","Ginger Island"],
+  ["garlic","Garlic","Sp","<b>Pierre's erst ab Jahr 2</b>"],
+  ["tulipbulb","Tulip Bulb","Sp","Samen, Pierre's im Frühling"],
+  ["jazzseeds","Jazz Seeds","Sp","Samen, Pierre's im Frühling"],
+  ["poppyseeds","Poppy Seeds","Su","Samen, Pierre's im Sommer"],
+  ["spangleseeds","Spangle Seeds","Su","Samen, Pierre's im Sommer"],
+  ["fairyrose","Fairy Rose","Fa","Pierre's"],
+  ["cloth","Cloth","all","Wolle in den Webstuhl"],
+  ["honey","Honey","Sp Su Fa","Bienenhaus, <b>kein Honig im Winter</b>"],
+  ["moss","Moss","all","Wächst an Bäumen"]]},
+ {name:"Angeln",items:[
+  ["anyfish","Beliebiger Fisch","all","Jeder Fisch zählt"],
+  ["riverjelly","River Jelly","all","Beifang beim Angeln im Fluss"],
+  ["seajelly","Sea Jelly","all","Beifang beim Angeln im Meer"],
+  ["cavejelly","Cave Jelly","all","Beifang beim Angeln in der Mine"]]},
+ {name:"Sammeln",items:[
+  ["coral","Coral","all","Strand"],
+  ["seaurchin","Sea Urchin","all","Strand, Gezeitenbecken östlich"],
+  ["horseradish","Wild Horseradish","Sp","Geheimer Wald, Cindersap-Wald, Berg"],
+  ["daffodil","Daffodil","Sp","Stadt, Bushaltestelle, Bahngleise"],
+  ["leek","Leek","Sp","Berg, Hinterwald, Bushaltestelle"],
+  ["dandelion","Dandelion","Sp","Cindersap-Wald, Bushaltestelle"],
+  ["spiceberry","Spice Berry","Su","Cindersap-Wald, Hinterwald, Berg"],
+  ["grape","Grape","Su","Hinterwald, Berg, Bushaltestelle"],
+  ["sweetpea","Sweet Pea","Su","Stadt, Cindersap-Wald"],
+  ["cmushroom","Common Mushroom","Sp Fa","Herbst überall im Wald; Frühling nur Geheimer Wald"],
+  ["wildplum","Wild Plum","Fa","Bushaltestelle, Bahngleise, Berg"],
+  ["hazelnut","Hazelnut","Fa","Berg, Hinterwald; Ahorn schütteln ab Herbst 14"],
+  ["blackberry","Blackberry","Fa","Büsche, Brombeersaison Herbst 8–11"],
+  ["winterroot","Winter Root","Wi","Boden umgraben (Hacke)"],
+  ["crystalfruit","Crystal Fruit","Wi","Bahngleise, Cindersap-Wald, Berg"],
+  ["snowyam","Snow Yam","Wi","Boden umgraben (Hacke)"],
+  ["crocus","Crocus","Wi","Stadt, Bahngleise, Bushaltestelle"],
+  ["ancientseed","Ancient Seed","all","Artefaktstellen; Museum spenden schaltet das Rezept frei"],
+  ["acorn","Acorn","all","Eichen schütteln oder fällen"],
+  ["mapleseed","Maple Seed","all","Ahorn schütteln oder fällen"],
+  ["pinecone","Pine Cone","all","Kiefern schütteln oder fällen"],
+  ["mahoganyseed","Mahogany Seed","all","Mahagonibäume"],
+  ["redmushroom","Red Mushroom","all","Mine; im Sommer und Herbst auch im Wald"],
+  ["purplemushroom","Purple Mushroom","all","Mine, Farmhöhle"],
+  ["morel","Morel","Sp","Geheimer Wald"],
+  ["chanterelle","Chanterelle","Fa","Geheimer Wald"],
+  ["coconut","Coconut","all","Wüste oder Ginger Island"]]},
+ {name:"Bergbau & Kampf",items:[
+  ["coal","Coal","all","Mine, Kohlemeiler"],
+  ["copperore","Copper Ore","all","Mine ab Ebene 1"],
+  ["copperbar","Copper Bar","all","Schmelzofen: 5 Kupfererz + 1 Kohle"],
+  ["ironore","Iron Ore","all","Mine ab Ebene 40"],
+  ["ironbar","Iron Bar","all","Schmelzofen: 5 Eisenerz + 1 Kohle"],
+  ["goldore","Gold Ore","all","Mine ab Ebene 80"],
+  ["goldbar","Gold Bar","all","Schmelzofen: 5 Golderz + 1 Kohle"],
+  ["iridiumore","Iridium Ore","all","Totenschädelhöhle"],
+  ["iridiumbar","Iridium Bar","all","Schmelzofen: 5 Iridiumerz + 1 Kohle"],
+  ["refinedquartz","Refined Quartz","all","Schmelzofen: Quarz + Kohle"],
+  ["radioactiveore","Radioactive Ore","all","Totenschädelhöhle mit Danger-Quest"],
+  ["radioactivebar","Radioactive Bar","all","Schmelzofen: 5 radioaktives Erz + 1 Kohle"],
+  ["solaressence","Solar Essence","all","Monster (Geister, Mumien u. a.)"],
+  ["voidessence","Void Essence","all","Monster (Schattenwesen u. a.)"],
+  ["bonefragment","Bone Fragment","all","Skelette, Knochenhaufen"],
+  ["batwing","Bat Wing","all","Fledermäuse in der Mine"],
+  ["slime","Slime","all","Schleime"],
+  ["bugmeat","Bug Meat","all","Insekten in der Mine"],
+  ["earthcrystal","Earth Crystal","all","Mine, Ebene 1–39"],
+  ["frozentear","Frozen Tear","all","Mine, Ebene 40–79"],
+  ["diamond","Diamond","all","Mine ab Ebene 50"],
+  ["aquamarine","Aquamarine","all","Mine"],
+  ["marble","Marble","all","Geoden"],
+  ["dwarfgadget","Dwarf Gadget","all","Artefakt aus Mine und Geoden"],
+  ["cindershard","Cinder Shard","all","Vulkan-Verlies"],
+  ["dragontooth","Dragon Tooth","all","Vulkan-Verlies"],
+  ["firequartz","Fire Quartz","all","Mine ab Ebene 80"]]},
+ {name:"Zwischenprodukte",items:[
+  ["furnace","Furnace","-","Selbst craften"],
+  ["wormbin","Worm Bin","-","Selbst craften"],
+  ["torch","Torch","-","Selbst craften"],
+  ["bait","Bait","-","Selbst craften, 1 Rezept ergibt 5 Stück"],
+  ["wildseedsany","Wild Seeds (beliebig)","all","Fallen beim Craften der Wild Seeds an, 1 Rezept ergibt 10 Stück"]]}
+];
+
+// Crafting-Rezepte: [Kategorie, id, Name, Zutaten]
+const CRAFT_RECIPES=[
+ ["Bomben","cherrybomb","Cherry Bomb","copperore*4 coal"],["Bomben","bomb","Bomb","ironore*4 coal"],
+ ["Bomben","megabomb","Mega Bomb","goldore*4 solaressence voidessence"],
+ ["Zäune","gate","Gate","wood*10"],["Zäune","woodfence","Wood Fence","wood*2"],["Zäune","stonefence","Stone Fence","stone*2"],
+ ["Zäune","ironfence","Iron Fence","ironbar"],["Zäune","hardwoodfence","Hardwood Fence","hardwood"],
+ ["Sprinkler","sprinkler","Sprinkler","copperbar ironbar"],["Sprinkler","qsprinkler","Quality Sprinkler","ironbar goldbar refinedquartz"],
+ ["Sprinkler","isprinkler","Iridium Sprinkler","goldbar iridiumbar batterypack"],
+ ["Handwerksgeräte","mayomachine","Mayonnaise Machine","wood*15 stone*15 earthcrystal copperbar"],
+ ["Handwerksgeräte","beehouse","Bee House","wood*40 coal*8 ironbar maplesyrup"],
+ ["Handwerksgeräte","preservesjar","Preserves Jar","wood*50 stone*40 coal*8"],
+ ["Handwerksgeräte","cheesepress","Cheese Press","wood*45 stone*45 hardwood*10 copperbar"],
+ ["Handwerksgeräte","loom","Loom","wood*60 fiber*30 pinetar"],["Handwerksgeräte","keg","Keg","wood*30 copperbar ironbar oakresin"],
+ ["Handwerksgeräte","oilmaker","Oil Maker","slime*50 hardwood*20 goldbar"],["Handwerksgeräte","cask","Cask","wood*20 hardwood"],
+ ["Handwerksgeräte","fishsmoker","Fish Smoker","hardwood*10 seajelly riverjelly cavejelly"],
+ ["Handwerksgeräte","dehydrator","Dehydrator","wood*30 clay*2 firequartz"],
+ ["Dünger","basicfert","Basic Fertilizer","sap*2"],["Dünger","qualityfert","Quality Fertilizer","sap*4 anyfish"],
+ ["Dünger","deluxefert","Deluxe Fertilizer","iridiumbar sap*40"],["Dünger","speedgro","Speed-Gro","pinetar moss*5"],
+ ["Dünger","deluxespeedgro","Deluxe Speed-Gro","oakresin bonefragment*5"],
+ ["Dünger","hyperspeedgro","Hyper Speed-Gro","radioactiveore bonefragment*3 solaressence"],
+ ["Dünger","basicsoil","Basic Retaining Soil","stone*2"],["Dünger","qualitysoil","Quality Retaining Soil","stone*3 clay"],
+ ["Dünger","deluxesoil","Deluxe Retaining Soil","stone*5 fiber*3 clay"],["Dünger","treefert","Tree Fertilizer","fiber*5 stone*5"],
+ ["Samen","wildsp","Wild Seeds (Sp)","horseradish daffodil leek dandelion"],["Samen","wildsu","Wild Seeds (Su)","spiceberry grape sweetpea"],
+ ["Samen","wildfa","Wild Seeds (Fa)","cmushroom wildplum hazelnut blackberry"],
+ ["Samen","wildwi","Wild Seeds (Wi)","winterroot crystalfruit snowyam crocus"],
+ ["Samen","ancientseeds","Ancient Seeds","ancientseed"],["Samen","grassstarter","Grass Starter","fiber*10"],
+ ["Samen","bluegrass","Blue Grass Starter","fiber*25 moss*10 mysticsyrup"],
+ ["Samen","teasapling","Tea Sapling","wildseedsany*2 fiber*5 wood*5"],["Samen","fiberseeds","Fiber Seeds","mixedseeds sap*5 clay"],
+ ["Samen","mystictree","Mystic Tree Seed","acorn*5 mapleseed*5 pinecone*5 mahoganyseed*5"],
+ ["Böden & Wege","woodfloor","Wood Floor","wood"],["Böden & Wege","rusticfloor","Rustic Plank Floor","wood"],
+ ["Böden & Wege","strawfloor","Straw Floor","wood fiber"],["Böden & Wege","weatheredfloor","Weathered Floor","wood"],
+ ["Böden & Wege","crystalfloor","Crystal Floor","refinedquartz"],["Böden & Wege","stonefloor","Stone Floor","stone"],
+ ["Böden & Wege","stonewalkway","Stone Walkway Floor","stone"],["Böden & Wege","brickfloor","Brick Floor","clay*2 stone*5"],
+ ["Böden & Wege","woodpath","Wood Path","wood"],["Böden & Wege","gravelpath","Gravel Path","stone"],
+ ["Böden & Wege","cobblepath","Cobblestone Path","stone"],["Böden & Wege","steppingpath","Stepping Stone Path","stone"],
+ ["Böden & Wege","crystalpath","Crystal Path","refinedquartz"],
+ ["Angeln","spinner","Spinner","ironbar*2"],["Angeln","trapbobber","Trap Bobber","copperbar sap*10"],
+ ["Angeln","sonarbobber","Sonar Bobber","ironbar refinedquartz*2"],["Angeln","corkbobber","Cork Bobber","wood*10 hardwood*5 slime*10"],
+ ["Angeln","qualitybobber","Quality Bobber","copperbar sap*20 solaressence*5"],["Angeln","treasurehunter","Treasure Hunter","goldbar*2"],
+ ["Angeln","dressedspinner","Dressed Spinner","ironbar*2 cloth"],["Angeln","barbedhook","Barbed Hook","copperbar ironbar goldbar"],
+ ["Angeln","magnet","Magnet","ironbar"],["Angeln","bait","Bait","bugmeat"],["Angeln","deluxebait","Deluxe Bait","bait*5 moss*2"],
+ ["Angeln","wildbait","Wild Bait","fiber*10 bugmeat*5 slime*5"],["Angeln","magicbait","Magic Bait","radioactiveore bugmeat*3"],
+ ["Angeln","challengebait","Challenge Bait","bonefragment*5 moss*2"],["Angeln","crabpot","Crab Pot","wood*40 ironbar*3"],
+ ["Ringe","sturdyring","Sturdy Ring","copperbar*2 bugmeat*25 slime*25"],
+ ["Ringe","warriorring","Warrior Ring","ironbar*10 coal*25 frozentear*10"],
+ ["Ringe","ringofyoba","Ring of Yoba","goldbar*5 ironbar*5 diamond"],["Ringe","thornsring","Thorns Ring","bonefragment*50 stone*50 goldbar"],
+ ["Ringe","glowstonering","Glowstone Ring","solaressence*5 ironbar*5"],
+ ["Ringe","iridiumband","Iridium Band","iridiumbar*5 solaressence*50 voidessence*50"],
+ ["Essbares","fieldsnack","Field Snack","acorn mapleseed pinecone"],["Essbares","bugsteak","Bug Steak","bugmeat*10"],
+ ["Essbares","lifeelixir","Life Elixir","redmushroom purplemushroom morel chanterelle"],
+ ["Essbares","oilofgarlic","Oil of Garlic","garlic*10 oil"],
+ ["Verbrauchsgüter","monstermusk","Monster Musk","batwing*30 slime*30"],["Verbrauchsgüter","fairydust","Fairy Dust","diamond fairyrose"],
+ ["Verbrauchsgüter","warpbeach","Warp Totem: Beach","hardwood coral*2 fiber*10"],
+ ["Verbrauchsgüter","warpmountain","Warp Totem: Mountains","hardwood ironbar stone*25"],
+ ["Verbrauchsgüter","warpfarm","Warp Totem: Farm","hardwood honey fiber*20"],
+ ["Verbrauchsgüter","warpdesert","Warp Totem: Desert","hardwood*2 coconut iridiumore*4"],
+ ["Verbrauchsgüter","warpisland","Warp Totem: Island","hardwood*5 dragontooth ginger"],
+ ["Verbrauchsgüter","raintotem","Rain Totem","hardwood truffleoil pinetar*5"],
+ ["Verbrauchsgüter","treasuretotem","Treasure Totem","hardwood*5 mysticsyrup moss*10"],
+ ["Beleuchtung","torch","Torch","wood sap*2"],["Beleuchtung","campfire","Campfire","stone*10 wood*10 fiber*10"],
+ ["Beleuchtung","woodbrazier","Wooden Brazier","wood*10 coal fiber*5"],["Beleuchtung","stonebrazier","Stone Brazier","stone*10 coal fiber*5"],
+ ["Beleuchtung","goldbrazier","Gold Brazier","goldbar coal fiber*5"],["Beleuchtung","carvedbrazier","Carved Brazier","hardwood*10 coal"],
+ ["Beleuchtung","stumpbrazier","Stump Brazier","hardwood*5 coal"],["Beleuchtung","barrelbrazier","Barrel Brazier","wood*50 solaressence coal"],
+ ["Beleuchtung","skullbrazier","Skull Brazier","bonefragment*10"],["Beleuchtung","marblebrazier","Marble Brazier","marble aquamarine stone*100"],
+ ["Beleuchtung","woodlamp","Wood Lamp-post","wood*50 batterypack"],["Beleuchtung","ironlamp","Iron Lamp-post","ironbar batterypack"],
+ ["Beleuchtung","jackolantern","Jack-O-Lantern","pumpkin torch"],
+ ["Verarbeitung","charcoalkiln","Charcoal Kiln","wood*20 copperbar*2"],
+ ["Verarbeitung","crystalarium","Crystalarium","stone*99 goldbar*5 iridiumbar*2 batterypack"],
+ ["Verarbeitung","furnace","Furnace","copperore*20 stone*25"],["Verarbeitung","heavyfurnace","Heavy Furnace","furnace*2 ironbar*3 stone*50"],
+ ["Verarbeitung","lightningrod","Lightning Rod","ironbar refinedquartz batwing*5"],
+ ["Verarbeitung","solarpanel","Solar Panel","refinedquartz*10 ironbar*5 goldbar*5"],
+ ["Verarbeitung","recycling","Recycling Machine","wood*25 stone*25 ironbar"],["Verarbeitung","seedmaker","Seed Maker","wood*25 coal*10 goldbar"],
+ ["Verarbeitung","slimeincubator","Slime Incubator","iridiumbar*2 slime*100"],
+ ["Verarbeitung","ostrichincubator","Ostrich Incubator","bonefragment*50 hardwood*50 cindershard*20"],
+ ["Verarbeitung","slimeeggpress","Slime Egg-Press","coal*25 firequartz batterypack"],["Verarbeitung","tapper","Tapper","wood*40 copperbar*2"],
+ ["Verarbeitung","heavytapper","Heavy Tapper","hardwood*30 radioactivebar"],
+ ["Verarbeitung","wormbin","Worm Bin","hardwood*15 goldbar ironbar fiber*50"],["Verarbeitung","deluxewormbin","Deluxe Worm Bin","wormbin moss*30"],
+ ["Verarbeitung","bonemill","Bone Mill","bonefragment*10 clay*3 stone*20"],["Verarbeitung","geodecrusher","Geode Crusher","goldbar*2 stone*50 diamond"],
+ ["Verarbeitung","mushroomlog","Mushroom Log","hardwood*10 moss*10"],["Verarbeitung","baitmaker","Bait Maker","ironbar*3 coral*3 seaurchin"],
+ ["Möbel","tuboflowers","Tub o' Flowers","wood*15 tulipbulb jazzseeds poppyseeds spangleseeds"],
+ ["Möbel","wickedstatue","Wicked Statue","stone*25 coal*5"],["Möbel","fluteblock","Flute Block","wood*10 copperore*2 fiber*20"],
+ ["Möbel","drumblock","Drum Block","stone*10 copperore*2 fiber*20"],
+ ["Lagerung","chest","Chest","wood*50"],["Lagerung","stonechest","Stone Chest","stone*50"],
+ ["Lagerung","bigchest","Big Chest","wood*120 copperbar*2"],["Lagerung","bigstonechest","Big Stone Chest","stone*250"],
+ ["Schilder","woodsign","Wood Sign","wood*25"],["Schilder","stonesign","Stone Sign","stone*25"],
+ ["Schilder","darksign","Dark Sign","batwing*5 bonefragment*5"],["Schilder","textsign","Text Sign","wood*25"],
+ ["Sonstiges","gardenpot","Garden Pot","clay stone*10 refinedquartz"],["Sonstiges","scarecrow","Scarecrow","wood*50 coal fiber*20"],
+ ["Sonstiges","deluxescarecrow","Deluxe Scarecrow","wood*50 fiber*40 iridiumore"],["Sonstiges","staircase","Staircase","stone*99"],
+ ["Sonstiges","explosiveammo","Explosive Ammo","ironbar coal*2"],["Sonstiges","transmutefe","Transmute (Fe)","copperbar*3"],
+ ["Sonstiges","transmuteau","Transmute (Au)","ironbar*2"],["Sonstiges","minijukebox","Mini-Jukebox","ironbar*2 batterypack"],
+ ["Sonstiges","miniobelisk","Mini-Obelisk","hardwood*30 solaressence*20 goldbar*3"],
+ ["Sonstiges","farmcomputer","Farm Computer","dwarfgadget batterypack refinedquartz*10"],
+ ["Sonstiges","hopper","Hopper","hardwood*10 iridiumbar radioactivebar"],["Sonstiges","cookoutkit","Cookout Kit","wood*15 fiber*10 coal*3"],
+ ["Sonstiges","tentkit","Tent Kit","hardwood*10 fiber*25 cloth"],["Sonstiges","statuedwarf","Statue Of The Dwarf King","iridiumbar*20"],
+ ["Sonstiges","statueblessings","Statue Of Blessings","sap*999 fiber*999 stone*999 moss*333"],
+ ["Sonstiges","anvil","Anvil","ironbar*50"],["Sonstiges","miniforge","Mini-Forge","dragontooth*5 ironbar*10 goldbar*10 iridiumbar*5"]
+];
+const CRAFT_YIELD={furnace:1,wormbin:1,torch:1,bait:5};
+
+// ---------- gemeinsame Logik für Kochen und Craften ----------
+const SEASON={Sp:"Frühling",Su:"Sommer",Fa:"Herbst",Wi:"Winter"};
+const CLS={Sp:"sp",Su:"su",Fa:"fa",Wi:"wi"};
+const ORDER=["Sp","Su","Fa","Wi"];
+
+function makeMode(cfg){
+  const ING={};
+  for(const g of cfg.groups) for(const [id,name,s,note] of g.items) ING[id]={id,name,s,note};
+  const REC=cfg.recipes.map(([cat,id,name,list])=>({cat,id,name,ings:list.split(" ").map(t=>{const [k,n]=t.split("*");return [k,+(n||1)]})}));
+  const RECBY=Object.fromEntries(REC.map(r=>[r.id,r]));
+  const Y=cfg.yields;
+  const INTER=Object.keys(Y);
+  function seasonsOf(id){
+    const it=ING[id];
+    if(it.s==="-"){const set=new Set();for(const [k] of RECBY[id].ings) seasonsOf(k).forEach(x=>set.add(x));return ORDER.filter(x=>set.has(x))}
+    return it.s==="all"?[]:it.s.split(" ");
+  }
+  for(const id in ING) ING[id].seasons=seasonsOf(id);
+  for(const r of REC){const set=new Set();for(const [k] of r.ings) ING[k].seasons.forEach(x=>set.add(x));r.seasons=ORDER.filter(x=>set.has(x))}
+  // Bedarf: jedes offene Rezept braucht seine Zutaten. Zwischenprodukte werden so oft hergestellt,
+  // wie offene Rezepte sie brauchen (geteilt durch den Ertrag), mindestens einmal, solange ihr eigenes Rezept offen ist.
+  function computeNeed(done){
+    const use={};
+    const add=(k,n)=>use[k]=(use[k]||0)+n;
+    for(const r of REC){ if(done[r.id]||Y[r.id]) continue; for(const [k,n] of r.ings) add(k,n); }
+    for(const i of INTER){
+      const units=use[i]||0;
+      const runs=Math.max(Math.ceil(units/Y[i]), done[i]?0:1);
+      use[i]=units>0?units:(runs?Y[i]:0);
+      for(const [k,n] of RECBY[i].ings) add(k,n*runs);
+    }
+    return use;
+  }
+  const BASE=computeNeed({});
+  const usedBy=(id,done)=>REC.filter(r=>!done[r.id]&&r.ings.some(([k])=>k===id)).map(r=>r.name);
+  return {...cfg,ING,REC,RECBY,computeNeed,BASE,usedBy};
+}
+
+// ---------- Dorfbewohner: Geschenke laut Stardew Valley Wiki (Abschnitt "Gifts" der jeweiligen Seite) ----------
+// [Name, geliebt, gemocht, Ausnahmen bei den universellen Vorlieben]; Listen mit "|" getrennt
+const UNI_LOVES=["Golden Pumpkin","Magic Rock Candy","Pearl","Prismatic Shard","Rabbit's Foot","Stardrop Tea"];
+const UNI_LOVE_EXCEPT={Haley:"Prismatic Shard",Penny:"Rabbit's Foot"};
+const UNI_LIKES="Artisan-Waren (außer Oil und Void Mayonnaise), Gekochtes (außer Fried Egg, Bread, Strange Bun, Seafoam Pudding), Blumen (außer Poppy), gesammelte Mineralien (außer Quartz), Früchte vom Obstbaum (außer Banana, Mango), Edelsteine, Gemüse (außer Hops, Tea Leaves, Wheat, Unmilled Rice), Life Elixir, Maple Syrup, Piña Colada, Rainbow Shell, Treasure Chest";
+const NPC_GROUPS=[
+ {name:"Heiratskandidaten",people:[
+  ["Abigail","Amethyst|Banana Pudding|Blackberry Cobbler|Chocolate Cake|Monster Compendium|Pufferfish|Pumpkin|Spicy Eel","Ancient Sword|Basilisk Paw|Bone Flute|Combat Quarterly|Quartz","Gemüse"],
+  ["Alex","Complete Breakfast|Jack Be Nimble, Jack Be Thick|Salmon Dinner|Stardrop Tea","Alle Eier (außer Void Egg)|Dinosaur Egg|Field Snack|Parrot Egg",""],
+  ["Elliott","Crab Cakes|Duck Feather|Lobster|Pomegranate|Squid Ink|Tom Kha Soup","Alle Bücher|Alles Obst (außer Pomegranate, Salmonberry)|Octopus|Squid","Amaranth, Pizza, Rainbow Shell"],
+  ["Emily","Amethyst|Aquamarine|Cloth|Emerald|Jade|Parrot Egg|Ruby|Stardrop Tea|Topaz|Wool","Daffodil|Quartz","Fish Taco, Fried Eel, Ice Cream, Maki Roll, Rice Pudding, Salmon Dinner, Spicy Eel, Sashimi"],
+  ["Haley","Coconut|Fruit Salad|Pink Cake|Sunflower|Stardrop Tea","Daffodil","Gemüse"],
+  ["Harvey","Coffee|Pickles|Super Meal|Truffle Oil|Wine","Alles Obst (außer Salmonberry, Spice Berry)|Chanterelle|Common Mushroom|Daffodil|Dandelion|Duck Egg|Duck Feather|Ginger|Goat Milk|Hazelnut|Holly|Large Goat Milk|Leek|Magma Cap|Morel|Purple Mushroom|Quartz|Snow Yam|Spring Onion|Wild Horseradish|Winter Root","Cheese, Goat Cheese, Rainbow Shell, Blueberry Tart, Chocolate Cake, Cookie, Cranberry Sauce, Fried Mushroom, Glazed Yams, Hashbrowns, Ice Cream, Pancakes, Pink Cake, Pizza, Rhubarb Pie, Rice Pudding"],
+  ["Leah","Goat Cheese|Poppyseed Muffin|Salad|Stir Fry|Truffle|Vegetable Medley|Wine","Alle Eier (außer Void Egg)|Alles Obst|Alle Milch|Chanterelle|Common Mushroom|Daffodil|Dandelion|Driftwood|Ginger|Hazelnut|Holly|Leek|Magma Cap|Morel|Purple Mushroom|Snow Yam|Spring Onion|Wild Horseradish|Winter Root","gesammelte Mineralien (außer Earth Crystal), Edelsteine (außer Diamond, Prismatic Shard), Carp Surprise, Cookie, Hashbrowns, Ice Cream, Pancakes, Pink Cake, Pizza, Rice Pudding, Survival Burger, Tortilla"],
+  ["Maru","Battery Pack|Cauliflower|Cheese Cauliflower|Diamond|Dwarf Gadget|Gold Bar|Iridium Bar|Miner's Treat|Pepper Poppers|Radioactive Bar|Rhubarb Pie|Strawberry|Stardrop Tea","Chanterelle|Copper Bar|Iron Bar|Magma Cap|Morel|Oak Resin|Pine Tar|Purple Mushroom|Quartz|Radioactive Ore","Honey, Maple Syrup, Pickles"],
+  ["Penny","Alle Bücher|Diamond|Emerald|Melon|Poppy|Poppyseed Muffin|Red Plate|Roots Platter|Sandfish|Tom Kha Soup|Stardrop Tea","Alle Artefakte|Alle Milch|Dandelion|Leek","Algae Soup, Beer, Mead, Pale Ale, Pale Broth, Piña Colada, Wine"],
+  ["Sam","Cactus Fruit|Maple Bar|Pizza|Tigerseye|Stardrop Tea","Alle Eier (außer Void Egg)|Joja Cola","Duck Mayonnaise, Mayonnaise, Pickles, Gemüse"],
+  ["Sebastian","Frog Egg|Frozen Tear|Obsidian|Pumpkin Soup|Sashimi|Stardrop Tea|Void Egg","Combat Quarterly|Flounder|Monster Compendium|Quartz","Blumen, Complete Breakfast, Farmer's Lunch, Omelet, Piña Colada, Artisan-Waren (außer Coffee, Green Tea, Oil)"],
+  ["Shane","Beer|Hot Pepper|Pepper Poppers|Pizza|Stardrop Tea","Alle Eier (außer Void Egg)|Alles Obst (außer Hot Pepper)","Pickles"]]},
+ {name:"Pelican Town",people:[
+  ["Caroline","Fish Taco|Green Tea|Summer Spangle|Tropical Curry","Daffodil|Tea Leaves|Wild Horseradish","Amaranth, Duck Mayonnaise, Mayonnaise"],
+  ["Clint","Amethyst|Aquamarine|Artichoke Dip|Emerald|Fiddlehead Risotto|Gold Bar|Iridium Bar|Jade|Omni Geode|Ruby|Topaz","Copper Bar|Iron Bar|Mining Monthly","Blumen"],
+  ["Demetrius","Bean Hotpot|Ice Cream|Rice Pudding|Strawberry","Alle Eier (außer Void Egg)|Alles Obst (außer Strawberry)|Dinosaur Egg|Purple Mushroom",""],
+  ["Evelyn","Beet|Chocolate Cake|Diamond|Fairy Rose|Raisins|Stuffing|Tulip","Alle Milch|Broken Glasses|Clam|Cockle|Coral|Daffodil|Mussel|Nautilus Shell|Oyster|Sea Urchin|Strand-Sammelgut (außer Seaweed)","Fried Eel, Garlic, Maki Roll, Sashimi, Spicy Eel, Trout Soup"],
+  ["George","Fried Mushroom|Leek","Daffodil","Blumen"],
+  ["Gus","Diamond|Escargot|Fish Taco|Orange|Tropical Curry|Stardrop Tea","Daffodil|Truffle","Coleslaw"],
+  ["Jas","Ancient Doll|Fairy Box|Fairy Rose|Pink Cake|Plum Pudding|Strange Doll (green)|Strange Doll (yellow)","Alle Milch|Coconut|Daffodil","Piña Colada, Triple Shot Espresso, Gemüse, Artisan-Waren (außer Honey, Jelly, Oil)"],
+  ["Jodi","Chocolate Cake|Crispy Bass|Diamond|Eggplant Parmesan|Fried Eel|Pancakes|Rhubarb Pie|Vegetable Medley|Stardrop Tea","Alle Eier (außer Void Egg)|Alles Obst (außer Spice Berry)|Alle Milch","Garlic"],
+  ["Kent","Fiddlehead Risotto|Roasted Hazelnuts","Alle Eier (außer Void Egg)|Alles Obst|Daffodil|Dwarvish Safety Manual","Algae Soup, Piña Colada, Sashimi, Tortilla"],
+  ["Lewis","Autumn's Bounty|Glazed Yams|Green Tea|Hot Pepper|Vegetable Medley|Stardrop Tea","Blueberry|Cactus Fruit|Coconut",""],
+  ["Linus","Blueberry Tart|Cactus Fruit|Coconut|Dish O' The Sea|The Alleyway Buffet|Yam","Alle Eier (außer Void Egg)|Alles Obst (außer Cactus Fruit, Coconut)|Alle Milch|Chanterelle|Common Mushroom|Daffodil|Dandelion|Ginger|Hazelnut|Holly|Leek|Magma Cap|Morel|Purple Mushroom|Snow Yam|Spring Onion|Wild Horseradish|Winter Root","Treasure Chest, gesammelte Mineralien, Edelsteine (außer Diamond, Prismatic Shard)"],
+  ["Marnie","Diamond|Farmer's Lunch|Pink Cake|Pumpkin Pie|Stardrop Tea","Alle Eier (außer Void Egg)|Alle Milch|Stardew Valley Almanac|Quartz",""],
+  ["Pam","Beer|Cactus Fruit|Glazed Yams|Mead|Pale Ale|Parsnip|Parsnip Soup|Piña Colada","Alles Obst (außer Cactus Fruit)|Alle Milch|Daffodil",""],
+  ["Pierre","Fried Calamari|Price Catalogue|Stardrop Tea","Alle Eier (außer Void Egg)|Alle Milch|Daffodil|Dandelion","Corn, Garlic, Parsnip Soup, Tortilla, gesammelte Mineralien, Edelsteine (außer Diamond, Prismatic Shard)"],
+  ["Robin","Goat Cheese|Peach|Spaghetti|Woody's Secret","Alles Obst (außer Peach)|Alle Milch|Hardwood|Quartz|Woodcutter's Weekly",""],
+  ["Vincent","Cranberry Candy|Frog Egg|Ginger Ale|Grape|Pink Cake|Snail","Alle Milch|Coconut|Daffodil","Piña Colada, Triple Shot Espresso, Gemüse, Artisan-Waren (außer Honey, Jelly, Oil)"],
+  ["Willy","Catfish|Diamond|Gold Bar|Iridium Bar|Jewels Of The Sea|Mead|Octopus|Pumpkin|Sea Cucumber|Sturgeon|The Art O' Crabbing","Bait And Bobber|Baked Fish|Carp Surprise|Chowder|Crab Cakes|Crispy Bass|Escargot|Fish Stew|Fish Taco|Fried Calamari|Fried Eel|Lingcod|Lobster Bisque|Quartz|Salmon Dinner|Seafoam Pudding|Tiger Trout|Trout Soup","Life Elixir, Gekochtes (außer den Fischgerichten links)"]]},
+ {name:"Außerhalb des Dorfs",people:[
+  ["Sandy","Crocus|Daffodil|Mango Sticky Rice|Sweet Pea","Alles Obst|Goat Milk|Large Goat Milk|Quartz|Wool",""],
+  ["Krobus","Diamond|Iridium Bar|Monster Compendium|Monster Musk|Pumpkin|Void Egg|Void Mayonnaise|Wild Horseradish","Gold Bar|Quartz|Seafoam Pudding|Strange Bun","Life Elixir, Gekochtes"],
+  ["Dwarf","Amethyst|Aquamarine|Emerald|Jade|Lava Eel|Lemon Stone|Omni Geode|Ruby|Topaz","Alle Artefakte|Cave Carrot|Quartz",""],
+  ["Wizard","Book of Mysteries|Purple Mushroom|Solar Essence|Super Cucumber|Void Essence","Alle Geoden-Mineralien|Alle Trinkets|Iridium Bar|Quartz",""],
+  ["Leo","Duck Feather|Mango|Ostrich Egg|Parrot Egg|Poi","Dragon Tooth|Mango Sticky Rice|Nautilus Shell|Quartz|Sea Urchin|Spice Berry","Beer, Coffee, Life Elixir, Mead, Pale Ale, Pickles, Piña Colada, Wine, Gekochtes (außer Bread, Fried Egg, Poi, Mango Sticky Rice, Triple Shot Espresso)"]]}
+];
+// Emoji als Symbolbild (keine Spielgrafiken): erst exakter Name, dann Muster, sonst Geschenk
+const ICON={"Pumpkin":"🎃","Golden Pumpkin":"🎃","Strawberry":"🍓","Melon":"🍈","Orange":"🍊","Peach":"🍑","Coconut":"🥥","Mango":"🥭","Grape":"🍇","Raisins":"🍇","Blueberry":"🫐","Cactus Fruit":"🌵","Hot Pepper":"🌶️","Cauliflower":"🥦","Parsnip":"🥕","Beet":"🥕","Winter Root":"🥕","Wild Horseradish":"🥕","Cave Carrot":"🥕","Yam":"🍠","Snow Yam":"🍠","Leek":"🧅","Spring Onion":"🧅","Ginger":"🫚","Hazelnut":"🌰","Holly":"🌿","Tea Leaves":"🍃","Pomegranate":"🍎","Spice Berry":"🍒",
+ "Daffodil":"🌼","Dandelion":"🌼","Sunflower":"🌻","Tulip":"🌷","Poppy":"🌺","Fairy Rose":"🌹","Summer Spangle":"🌸","Crocus":"🌸","Sweet Pea":"🌸",
+ "Pizza":"🍕","Ice Cream":"🍨","Pancakes":"🥞","Fish Taco":"🌮","Sashimi":"🍣","Spaghetti":"🍝","Salad":"🥗","Coffee":"☕","Green Tea":"🍵","Stardrop Tea":"🍵","Wine":"🍷","Beer":"🍺","Pale Ale":"🍺","Mead":"🍺","Piña Colada":"🍹","Ginger Ale":"🥤","Joja Cola":"🥤","Complete Breakfast":"🍳","Maple Bar":"🍩","Poppyseed Muffin":"🧁","Cranberry Candy":"🍬","Magic Rock Candy":"🍬","Fried Calamari":"🦑","Crab Cakes":"🦀","Escargot":"🐌","Mango Sticky Rice":"🥭","Pickles":"🥒","Truffle Oil":"🫒","Goat Cheese":"🧀","Cheese Cauliflower":"🧀","Void Mayonnaise":"🫙","Strange Bun":"🍞","Fruit Salad":"🥗","Stir Fry":"🥘","Vegetable Medley":"🥗","Roasted Hazelnuts":"🌰",
+ "Pufferfish":"🐡","Lobster":"🦞","Squid":"🦑","Squid Ink":"🦑","Octopus":"🐙","Clam":"🦪","Cockle":"🦪","Mussel":"🦪","Oyster":"🦪","Pearl":"🦪","Coral":"🪸","Nautilus Shell":"🐚","Rainbow Shell":"🐚","Snail":"🐌","Sea Urchin":"🐚",
+ "Wool":"🧶","Cloth":"🧵","Duck Feather":"🪶","Rabbit's Foot":"🐇","Truffle":"🍄","Battery Pack":"🔋","Oak Resin":"🫙","Pine Tar":"🫙","Hardwood":"🪵","Driftwood":"🪵","Solar Essence":"✨","Void Essence":"✨","Monster Musk":"🧪","Life Elixir":"🧪","Treasure Chest":"🧰","Fairy Box":"🎁","Ancient Sword":"⚔️","Dragon Tooth":"🦷","Bone Flute":"🦴","Broken Glasses":"👓","Dwarf Gadget":"⚙️","Ancient Doll":"🪆","Strange Doll (green)":"🪆","Strange Doll (yellow)":"🪆","Basilisk Paw":"🐾","Alle Artefakte":"🏺","Alle Trinkets":"🔮","Alles Obst":"🍎","Alle Milch":"🥛","Eggplant Parmesan":"🍆","Strand-Sammelgut (außer Seaweed)":"🐚"};
+const ICON_RX=[[/Egg/,"🥚"],[/Milk/,"🥛"],[/Mushroom|Chanterelle|Morel|Magma Cap/,"🍄"],[/Obst/,"🍎"],[/ Bar$/,"🧱"],[/Ore$|Geode|Quartz|Obsidian|Frozen Tear|Lemon Stone|Tigerseye|Mineral/,"🪨"],[/Amethyst|Aquamarine|Emerald|Jade|Ruby|Topaz|Diamond|Prismatic/,"💎"],
+ [/Bücher|Compendium|Quarterly|Monthly|Almanac|Weekly|Catalogue|Manual|Bait And Bobber|Jewels Of The Sea|Art O' Crabbing|Book of/,"📖"],[/Pie|Tart|Cobbler/,"🥧"],[/Cake/,"🍰"],[/Pudding/,"🍮"],[/Soup|Chowder|Stew|Bisque/,"🍜"],
+ [/Catfish|Sturgeon|Sandfish|Eel|Lingcod|Trout|Flounder|Sea Cucumber|Super Cucumber|Bass/,"🐟"]];
+function iconOf(name){if(ICON[name])return ICON[name];for(const [rx,e] of ICON_RX) if(rx.test(name)) return e;return "🍲"}
+
+// ---------- Modi ----------
+const MODES={
+  cook:makeMode({groups:COOK_GROUPS,recipes:RECIPES.map(r=>["Gerichte",...r]),
+    yields:{friedegg:1,hashbrowns:1,pancakes:1,omelet:1,tortilla:1,bread:1},
+    recLabel:"Gerichte",ingLabel:"Zutaten",doneWord:"gekocht",openWord:"Zutaten offen",
+    introRec:"Alle 81 Rezepte für den Erfolg Gourmet Chef. Hakst du ein Gericht ab, verschwinden seine Zutaten aus dem Bedarf. Die Farben zeigen, aus welchen Jahreszeiten die Zutaten stammen.",
+    introIng:"Mengen werden aus den noch offenen Gerichten berechnet, ohne Puffer. Häkchen bedeutet: habe ich genug im Lager. Zwischengerichte wie Bread zählen ihre Zutaten mit. Im Gewächshaus wächst jede Feldfrucht ganzjährig."}),
+  craft:makeMode({groups:CRAFT_GROUPS,recipes:CRAFT_RECIPES,yields:CRAFT_YIELD,
+    recLabel:"Gegenstände",ingLabel:"Materialien",doneWord:"gecraftet",openWord:"Materialien offen",
+    introRec:"Alle 149 Rezepte für den Erfolg Craft Master (der Wedding Ring zählt laut Wiki nicht). Hakst du einen Gegenstand ab, verschwinden seine Materialien aus dem Bedarf.",
+    introIng:"Mengen werden aus den noch offenen Gegenständen berechnet, ohne Puffer. Häkchen bedeutet: habe ich genug im Lager. Zwischenprodukte wie Furnace oder Bait zählen ihre Materialien mit; Barren schmilzt du selbst im Schmelzofen."})
+};
+
+// ---------- Zustand ----------
+const LS={cook:["gourmet-chef-checked-v1","gourmet-chef-cooked-v1"],craft:["craft-master-checked-v1","craft-master-crafted-v1"]};
+const S={cook:{checked:{},done:{}},craft:{checked:{},done:{}},npc:{checked:{},done:{}}};
+const LS_NPC="dorf-done-v1";
+let mode="cook", view="rec", filter="alle", hideDone=false;
+let docRef=null, dirty=false, writing=false, timer=null;
+
+function bucketOf(seasons){
+  if(!seasons.length) return 5;
+  if(seasons.length===1) return ORDER.indexOf(seasons[0]);
+  return 4+ORDER.indexOf(seasons[0])/10;
+}
+function bucketLabel(b,rec){
+  if(b===5) return ["Ganzjährig","yr"];
+  if(b>=4) return [rec?"Zutaten aus mehreren Jahreszeiten, früh einlagern":"Mehrere Jahreszeiten","yr"];
+  return [SEASON[ORDER[b]],CLS[ORDER[b]]];
+}
+function seasonMatch(seasons){
+  if(filter==="alle") return true;
+  if(filter==="all") return !seasons.length;
+  return seasons.includes(filter);
+}
+function wiki(name){return "https://stardewvalleywiki.com/"+encodeURIComponent(name.replace(/ /g,"_"))}
+function pillsFor(seasons){
+  return (seasons.length?seasons.map(k=>`<span class="pill ${CLS[k]}">${SEASON[k]}</span>`):[`<span class="pill yr">Ganzjährig</span>`]).join("");
+}
+function esc(s){return s.replace(/&/g,"&amp;").replace(/</g,"&lt;")}
+function linkName(name,nolink){return nolink?esc(name):`<a href="${wiki(name)}" target="_blank" rel="noopener">${esc(name)}</a>`}
+
+function render(){
+  document.body.classList.toggle("npc",mode==="npc");
+  document.querySelectorAll(".mode").forEach(t=>t.setAttribute("aria-selected",String(t.dataset.mode===mode)));
+  if(mode==="npc") return renderNpc();
+  const M=MODES[mode], st=S[mode];
+  const need=M.computeNeed(st.done);
+  const nDone=M.REC.filter(r=>st.done[r.id]).length;
+  const open=Object.keys(M.ING).filter(id=>(need[id]||0)>0&&!st.checked[id]).length;
+  document.getElementById("recStat").textContent=M.recLabel;
+  document.getElementById("doneCount").textContent=`${nDone} / ${M.REC.length}`;
+  document.getElementById("openStat").textContent=M.openWord;
+  document.getElementById("openCount").textContent=open;
+  document.getElementById("bar").style.width=(nDone/M.REC.length*100)+"%";
+  document.getElementById("tab-rec").textContent=M.recLabel;
+  document.getElementById("tab-ing").textContent=M.ingLabel;
+  document.querySelectorAll(".tab").forEach(t=>t.setAttribute("aria-selected",String(t.dataset.view===view)));
+  document.getElementById("intro").textContent=view==="rec"?M.introRec:M.introIng;
+  const root=document.getElementById("list");
+  root.textContent="";
+  if(view==="rec") renderRecipes(root,M,st); else renderIngredients(root,M,st,need);
+}
+
+function renderGroup(root,title,rows,doneCount,totalCount,rec){
+  const sec=document.createElement("section"); sec.className="group";
+  sec.innerHTML=`<div class="ghead"><h2></h2><span class="count">${doneCount} / ${totalCount}</span></div>`;
+  sec.querySelector("h2").textContent=title;
+  if(!rows.length){const p=document.createElement("p");p.className="empty";p.textContent="Nichts in dieser Auswahl.";sec.append(p);root.append(sec);return}
+  let last=null, ul=null;
+  for(const row of rows){
+    const [label,cls]=bucketLabel(row.b,rec);
+    if(label!==last){
+      const h=document.createElement("div"); h.className="bucket "+cls; h.textContent=label;
+      ul=document.createElement("ul"); ul.className="items"; sec.append(h,ul); last=label;
+    }
+    ul.append(row.li);
+  }
+  root.append(sec);
+}
+
+function renderRecipes(root,M,st){
+  const cats=[...new Set(M.REC.map(r=>r.cat))];
+  for(const cat of cats){
+    const recs=M.REC.map((r,i)=>({r,i,b:bucketOf(r.seasons)})).filter(x=>x.r.cat===cat).sort((a,b)=>a.b-b.b||a.i-b.i);
+    const out=[];
+    for(const {r,b} of recs){
+      const done=!!st.done[r.id];
+      if(hideDone&&done) continue;
+      if(!seasonMatch(r.seasons)) continue;
+      const allHave=r.ings.every(([k])=>st.checked[k]);
+      const chips=r.ings.map(([k,n])=>{
+        const it=M.ING[k], cls=it.seasons.length===1?CLS[it.seasons[0]]:"yr";
+        return `<span class="pill ${cls}${st.checked[k]?" have":""}">${esc(it.name)}${n>1?" ×"+n:""}</span>`;
+      }).join("");
+      const li=document.createElement("li");
+      li.className="item"+(done?" done":"");
+      li.innerHTML=`<input type="checkbox" id="${mode}-r-${r.id}" ${done?"checked":""} aria-label="${esc(r.name)} ${M.doneWord}">
+        <div class="main"><div class="name">${linkName(r.name)}</div><div class="pills">${chips}</div></div>
+        <div class="qty">${!done&&allHave?'<span class="ready">Alles da</span>':""}</div>`;
+      li.querySelector("input").addEventListener("change",e=>{ if(e.target.checked) st.done[r.id]=true; else delete st.done[r.id]; save(); });
+      out.push({b,li});
+    }
+    renderGroup(root,cat,out,recs.filter(x=>st.done[x.r.id]).length,recs.length,true);
+  }
+}
+
+function renderIngredients(root,M,st,need){
+  for(const g of M.groups){
+    const items=g.items.map((it,i)=>({id:it[0],i,b:bucketOf(M.ING[it[0]].seasons)})).sort((a,b)=>a.b-b.b||a.i-b.i);
+    let doneCount=0; const out=[];
+    for(const {id,b} of items){
+      const it=M.ING[id], n=need[id]||0, base=M.BASE[id]||0;
+      const done=n===0||!!st.checked[id];
+      if(done) doneCount++;
+      if(hideDone&&done) continue;
+      if(!seasonMatch(it.seasons)) continue;
+      const users=M.usedBy(id,st.done);
+      const forTxt=n===0?"Nicht mehr nötig":(users.length>4?`Für ${users.length} Rezepte`:`Für ${users.join(", ")}`);
+      const li=document.createElement("li");
+      li.className="item"+(done?" done":"");
+      li.innerHTML=`<input type="checkbox" id="${mode}-i-${id}" ${st.checked[id]?"checked":""} ${n===0?"disabled":""} aria-label="${esc(it.name)} habe ich">
+        <div class="main"><div class="name">${linkName(it.name,id==="anyfish"||id==="wildseedsany")}</div>
+        <div class="note">${it.note}</div><div class="note">${esc(forTxt)}</div><div class="pills">${pillsFor(it.seasons)}</div></div>
+        <div class="qty">×${n}${n!==base?`<small>von ${base}</small>`:""}</div>`;
+      li.querySelector("input").addEventListener("change",e=>{ if(e.target.checked) st.checked[id]=true; else delete st.checked[id]; save(); });
+      out.push({b,li});
+    }
+    renderGroup(root,g.name,out,doneCount,g.items.length,false);
+  }
+}
+
+
+// ---------- Dorfbewohner ----------
+const SEASON_OF={};
+for(const m of Object.values(MODES)) for(const it of Object.values(m.ING)) if(!(it.name in SEASON_OF)) SEASON_OF[it.name]=it.seasons;
+const openNpc=new Set();
+function hue(n){let h=0;for(const c of n) h=(h*31+c.charCodeAt(0))%360;return h}
+function giftChip(name){
+  const s=SEASON_OF[name], cls=!s?"nn":s.length===1?CLS[s[0]]:"yr";
+  const tip=s?(s.length?s.map(k=>SEASON[k]).join(", "):"Ganzjährig"):"";
+  const cat=/^(Alle|Strand|Gekocht)/.test(name);
+  return `<span class="gchip ${cls}"${tip?` title="${tip}"`:""}><span class="ico" aria-hidden="true">${iconOf(name)}</span>${cat?esc(name):linkName(name)}</span>`;
+}
+function renderNpc(){
+  const total=NPC_GROUPS.reduce((a,g)=>a+g.people.length,0), D=S.npc.done;
+  const nDone=Object.keys(D).length;
+  document.getElementById("recStat").textContent="Dorfbewohner";
+  document.getElementById("doneCount").textContent=`${nDone} / ${total}`;
+  document.getElementById("bar").style.width=(nDone/total*100)+"%";
+  document.getElementById("intro").innerHTML=`Fahr mit der Maus über einen Namen oder tipp ihn an. Farbige Gaben haben eine Jahreszeit (aus den Koch- und Craftlisten), grau umrandete sind dort nicht erfasst.<details><summary>Was zählt als universell?</summary><p><b>Universelle Lieblinge:</b> ${UNI_LOVES.join(", ")}.</p><p><b>Universelle Vorlieben:</b> ${UNI_LIKES}.</p></details>`;
+  const root=document.getElementById("list"); root.textContent="";
+  for(const g of NPC_GROUPS){
+    const sec=document.createElement("section"); sec.className="group";
+    sec.innerHTML=`<div class="ghead"><h2>${g.name}</h2><span class="count">${g.people.filter(p=>D[p[0]]).length} / ${g.people.length}</span></div>`;
+    const ul=document.createElement("ul"); ul.className="items";
+    for(const [name,loves,likes,ex] of g.people){
+      const L=loves.split("|"), K=likes.split("|"), hate=UNI_LOVE_EXCEPT[name];
+      const uni=UNI_LOVES.filter(x=>x!==hate&&!L.includes(x));
+      const open=openNpc.has(name), done=!!D[name];
+      if(hideDone&&done) continue;
+      const li=document.createElement("li"); li.className="item npc"+(open?" open":"")+(done?" done":"");
+      li.innerHTML=`<input type="checkbox" id="npc-${name}" ${done?"checked":""} aria-label="${name} erledigt">
+        <span class="ava" style="--h:${hue(name)}" aria-hidden="true">${name[0]}</span>
+        <div class="main"><div class="name">${linkName(name)}</div><div class="note">Liebt ${esc(L.slice(0,3).join(", "))}${L.length>3?` und ${L.length-3} weitere`:""}</div></div>
+        <button class="more" type="button" aria-expanded="${open}" aria-label="Geschenke für ${name}">♥ ${L.length}</button>
+        <div class="gift">
+          <h3>Liebt</h3><div class="gchips">${L.map(giftChip).join("")}</div>
+          <div class="uni">Dazu universell geliebt:</div><div class="gchips small">${uni.map(giftChip).join("")}</div>
+          ${hate?`<div class="uni warnline">Achtung: ${name} hasst ${hate}.</div>`:""}
+          <h3>Mag</h3><div class="gchips">${K.map(giftChip).join("")}</div>
+          <div class="uni">Dazu alle universellen Vorlieben${ex?`, außer: ${esc(ex)}`:""}.</div>
+        </div>`;
+      li.querySelector("input").addEventListener("change",e=>{ if(e.target.checked) D[name]=true; else delete D[name]; save(); });
+      li.addEventListener("click",e=>{
+        if(e.target.closest("a,input")) return;
+        if(openNpc.has(name)) openNpc.delete(name); else openNpc.add(name);
+        li.classList.toggle("open"); li.querySelector(".more").setAttribute("aria-expanded",String(openNpc.has(name)));
+      });
+      ul.append(li);
+    }
+    if(!ul.children.length){const p=document.createElement("p");p.className="empty";p.textContent="Alle erledigt.";sec.append(p)}
+    sec.append(ul); root.append(sec);
+  }
+}
+
+// ---------- Speichern ----------
+// Prüfen, ob der Browser hier überhaupt speichern darf (privates Fenster, blockierte Website-Daten)
+const LOCAL_OK=(()=>{try{localStorage.setItem("__t","1");const ok=localStorage.getItem("__t")==="1";localStorage.removeItem("__t");return ok}catch(e){return false}})();
+function saveLocal(){try{for(const m in LS){localStorage.setItem(LS[m][0],JSON.stringify(S[m].checked));localStorage.setItem(LS[m][1],JSON.stringify(S[m].done))}localStorage.setItem(LS_NPC,JSON.stringify(S.npc.done))}catch(e){}}
+function loadDoc(v){
+  S.cook.checked={...(v.checked||{})}; S.cook.done={...(v.cooked||{})};
+  S.craft.checked={...(v.craftChecked||{})}; S.craft.done={...(v.crafted||{})};
+  S.npc.done={...(v.npcDone||{})};
+}
+function hasAny(){return ["cook","craft","npc"].some(m=>Object.keys(S[m].checked).length||Object.keys(S[m].done).length)}
+function save(){
+  saveLocal(); render();
+  if(docRef){dirty=true;clearTimeout(timer);timer=setTimeout(flush,700)}
+}
+async function flush(){
+  if(!docRef||writing||!dirty) return;
+  writing=true; dirty=false;
+  try{ await docRef.set({checked:{...S.cook.checked},cooked:{...S.cook.done},craftChecked:{...S.craft.checked},crafted:{...S.craft.done},npcDone:{...S.npc.done},updated:Date.now()}); setSync(true); }
+  catch(e){
+    // Wer die Seite nur ansehen darf (z. B. per Link geteilt), kann nicht ins Konto schreiben: dann bleibt alles im Browser
+    if(e&&e.code==="invalid_argument"){ docRef=null; setSync(false); }
+    else setSync(false,"Speichern im Konto fehlgeschlagen, in diesem Browser gesichert");
+  }
+  writing=false;
+  if(dirty) flush();
+}
+function setSync(ok,text){
+  const el=document.getElementById("sync");
+  el.className="sync"+(ok?" ok":LOCAL_OK?"":" bad");
+  el.textContent=text||(ok?"In deinem Konto gespeichert":LOCAL_OK?"In diesem Browser gespeichert":"Achtung: Dieser Browser speichert hier nicht, Häkchen gehen beim Schließen verloren");
+  el.title=ok?"Gilt auf jedem Gerät, auf dem du angemeldet bist":"Bleibt erhalten, solange du denselben Browser nutzt und die Browserdaten nicht löschst (nicht im privaten Fenster, nicht im WhatsApp- oder Instagram-Browser)";
+}
+
+function remember(){try{localStorage.setItem("gourmet-ui",JSON.stringify({mode,view}))}catch(e){}}
+
+// ---------- Bedienung ----------
+document.querySelectorAll(".mode").forEach(t=>t.addEventListener("click",()=>{mode=t.dataset.mode;remember();render()}));
+document.querySelectorAll(".tab").forEach(t=>t.addEventListener("click",()=>{view=t.dataset.view;remember();render()}));
+document.querySelectorAll(".chip").forEach(btn=>btn.addEventListener("click",()=>{
+  filter=btn.dataset.f;
+  document.querySelectorAll(".chip").forEach(b=>b.setAttribute("aria-pressed",String(b===btn)));
+  render();
+}));
+document.getElementById("hideDone").addEventListener("change",e=>{hideDone=e.target.checked;render()});
+const resetBtn=document.getElementById("reset");
+let armed=null;
+const MODE_NAME={cook:"Kochen",craft:"Craften",npc:"Dorfbewohner"};
+function resetLabel(){resetBtn.textContent=`${MODE_NAME[mode]} zurücksetzen`}
+resetBtn.addEventListener("click",()=>{
+  if(!armed){
+    resetBtn.classList.add("arm"); resetBtn.textContent=`Wirklich alle Häkchen bei ${MODE_NAME[mode]} löschen?`;
+    armed=setTimeout(()=>{armed=null;resetBtn.classList.remove("arm");resetLabel()},4000);
+    return;
+  }
+  clearTimeout(armed); armed=null; resetBtn.classList.remove("arm");
+  S[mode]={checked:{},done:{}}; save(); resetLabel();
+});
+const _render=render; render=function(){_render(); if(!armed) resetLabel();};
+
+for(const m in LS){
+  try{S[m].checked=JSON.parse(localStorage.getItem(LS[m][0])||"{}")||{}}catch(e){}
+  try{S[m].done=JSON.parse(localStorage.getItem(LS[m][1])||"{}")||{}}catch(e){}
+}
+try{const u=JSON.parse(localStorage.getItem("gourmet-ui")||"{}");if(u.mode in MODES||u.mode==="npc")mode=u.mode;if(u.view==="rec"||u.view==="ing")view=u.view}catch(e){}
+try{S.npc.done=JSON.parse(localStorage.getItem(LS_NPC)||"{}")||{}}catch(e){}
+if(location.hash==="#craften")mode="craft"; else if(location.hash==="#kochen")mode="cook"; else if(location.hash==="#dorf")mode="npc";
+if(location.hash) remember();
+setSync(false);
+render();
+
+(async()=>{
+  if(!window.claude||!window.claude.use) return;
+  const [d,user]=await Promise.all([claude.use("db"),claude.use("user")]);
+  if(!d||!user) return;
+  const uid=await user.id();
+  if(!uid) return;
+  docRef=d.doc("data/users/"+uid+"/gourmet");
+  let first=true;
+  docRef.onSnapshot(snap=>{
+    if(first){
+      first=false;
+      if(snap.exists){ loadDoc(snap.data()); setSync(true); }
+      else if(hasAny()){ dirty=true; flush(); }
+      saveLocal(); render(); return;
+    }
+    if(snap.metadata.hasPendingWrites||dirty||writing) return;
+    if(snap.exists){ loadDoc(snap.data()); saveLocal(); render(); }
+  },()=>setSync(false));
+})();
+
+</script>
